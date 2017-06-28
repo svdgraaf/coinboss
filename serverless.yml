@@ -1,103 +1,146 @@
-# Welcome to Serverless!
-#
-# This file is the main config file for your service.
-# It's very minimal at this point and uses default values.
-# You can always add more config options for more control.
-# We've included some commented out config examples here.
-# Just uncomment any of them to get that config option.
-#
-# For full config options, check the docs:
-#    docs.serverless.com
-#
-# Happy Coding!
+service: coinboss
 
-service: aws-nodejs # NOTE: update this with your service name
-
-# You can pin your service to only deploy with a specific Serverless version
-# Check out our docs for more details
-# frameworkVersion: "=X.X.X"
+custom:
+  buy_at: 275
+  percentage: 5
+  currency: EUR
+  coin: ETH
+  api_key: ${env:API_KEY}
+  api_secret: ${env:API_SECRET}
 
 provider:
   name: aws
   runtime: nodejs6.10
+  stage: dev
+  region: eu-west-1
 
-# you can overwrite defaults here
-#  stage: dev
-#  region: us-east-1
+  environment:
+    API_KEY: ${self:custom.api_key}
+    API_SECRET: ${self:custom.api_secret}
+    CURRENCY: ${self:custom.currency}
+    PERCENTAGE: ${self:custom.percentage}
+    COIN: ${self:custom.api_key}
 
-# you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
-
-# you can define service wide environment variables here
-#  environment:
-#    variable1: value1
-
-# you can add packaging information here
-#package:
-#  include:
-#    - include-me.js
-#    - include-me-dir/**
-#  exclude:
-#    - exclude-me.js
-#    - exclude-me-dir/**
+  iamRoleStatements:
+    -  Effect: "Allow"
+       Action:
+         - "cloudwatch:PutMetricData"
+       Resource: "*"
+    - Effect: "Allow"
+      Action:
+         - "cloudformation:UpdateStack"
+      Resource:
+        - Ref: 'AWS::StackId'
 
 functions:
-  hello:
-    handler: handler.hello
+  updateBuyPrices:
+    handler: handler.updateTransactionPrices
+    events:
+      - schedule:
+          rate: rate(1 minute)
+          input:
+            coin: ${self:custom.coin}
 
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
-#    events:
-#      - http:
-#          path: users/create
-#          method: get
-#      - s3: ${env:BUCKET}
-#      - schedule: rate(10 minutes)
-#      - sns: greeter-topic
-#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
-#      - alexaSkill
-#      - iot:
-#          sql: "SELECT * FROM 'some_topic'"
-#      - cloudwatchEvent:
-#          event:
-#            source:
-#              - "aws.ec2"
-#            detail-type:
-#              - "EC2 Instance State-change Notification"
-#            detail:
-#              state:
-#                - pending
-#      - cloudwatchLog: '/aws/lambda/hello'
-#      - cognitoUserPool:
-#          pool: MyUserPool
-#          trigger: PreSignUp
+  buyCoins:
+    handler: handler.buyCoins
+    environment:
+      percentage: ${self:custom.percentage}
+    events:
+      - sns: buyCoins
 
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
+  sellCoins:
+    handler: handler.sellCoins
+    events:
+      - sns: sellCoins
+
+  updateThresholds:
+    handler: handler.updateThresholds
+    events:
+      - schedule:
+          rate: rate(1 minute)
+          input:
+            BuyAt: ${file(./threshold.js):min}
+            SellAt: ${file(./threshold.js):max}
+
+  calculateAverage:
+    handler: handler.calculateAverage
+    events:
+      - schedule:
+          rate: rate(15 minutes)
+          input:
+            minutes: 15
+      - schedule:
+          rate: rate(5 minutes)
+          input:
+            minutes: 5
+      - schedule:
+          rate: rate(60 minutes)
+          input:
+            minutes: 60
+    # environment:
+    #   StartAt:
+    #     Ref: 'StartAt'
+    #   Percentage:
+    #     Ref: 'Percentage'
+    #   Stack:
+    #     Ref: 'AWS::StackId'
 
 # you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
+resources:
+  # Parameters:
+  #   Currency:
+  #     Type: String
+  #     Default: ${self:custom.currency}
+  #   Coin:
+  #     Type: String
+  #     Default: ${self:custom.coin}
+  #   Percentage:
+  #     Type: Number
+  #     Default: ${self:custom.percentage}
+  #   ApiKey:
+  #     Type: String
+  #     Default: ${self:custom.api_key}
+  #   ApiSecret:
+  #     Type: String
+  #     Default: ${self:custom.api_secret}
+  #   BuyAt:
+  #     Type: Number
+  #     Default: ${self:custom.start_at}
+  #     Description: Amount at which coins will be bought (auto-updated)
+  #   SellAt:
+  #     Type: Number
+  #     Default: ${self:custom.start_at}
+  #     Description: Amount at which coins will be sold (auto-updated)
+
+  Resources:
+    SellAlarm:
+     Type: AWS::CloudWatch::Alarm
+     Properties:
+       ActionsEnabled: true
+       ComparisonOperator: GreaterThanOrEqualToThreshold
+       MetricName: Sell ETH-EUR
+       AlarmDescription: Sell ETH when the price goes above this threshold
+       Namespace: Coinboss
+       Statistic: Average
+       Threshold: ${file(./threshold.js):max}
+       Unit: Count
+       EvaluationPeriods: 1
+       Period: 60
+       AlarmActions:
+         - Ref: 'SNSTopicSellCoins'
+
+    BuyAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        ActionsEnabled: true
+        ComparisonOperator: LessThanOrEqualToThreshold
+        AlarmDescription: Buy ETH when the price goes above this threshold
+        MetricName: Buy ETH-EUR
+        Namespace: Coinboss
+        Statistic: Average
+        Threshold: ${file(./threshold.js):min}
+        Unit: Count
+        EvaluationPeriods: 1
+        Period: 60
+        AlarmActions:
+          - Ref: 'SNSTopicBuyCoins'
