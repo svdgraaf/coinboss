@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "aws-sdk": "^2.78.0",
+    "coinbase": "^2.0.6",
+    "moment": "^2.18.1"
+  }
+}
