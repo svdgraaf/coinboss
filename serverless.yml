@@ -18,8 +18,8 @@ provider:
     API_KEY: ${self:custom.api_key}
     API_SECRET: ${self:custom.api_secret}
     CURRENCY: ${self:custom.currency}
-    PERCENTAGE: ${self:custom.percentage}
-    COIN: ${self:custom.api_key}
+    # PERCENTAGE: ${self:custom.percentage}
+    COIN: ${self:custom.coin}
 
   iamRoleStatements:
     -  Effect: "Allow"
