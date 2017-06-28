@@ -25,6 +25,7 @@ provider:
     -  Effect: "Allow"
        Action:
          - "cloudwatch:PutMetricData"
+         - "cloudwatch:GetMetricStatistics"
        Resource: "*"
     - Effect: "Allow"
       Action:
