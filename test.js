@@ -1,6 +1,6 @@
 'use strict';
 var foo = require('./handler.js')
 
-foo.calculateAverage({
+foo.calculateExponentialAverage({
   minutes: 15
 });

@@ -2,6 +2,7 @@
 var Client = require('coinbase').Client;
 var AWS = require('aws-sdk');
 var moment = require('moment');
+var MA = require('moving-average');
 var cloudwatch = new AWS.CloudWatch();
 
 var cbClient = new Client({'apiKey': process.env.API_KEY, 'apiSecret': process.env.API_SECRET});
@@ -38,26 +39,31 @@ module.exports.putCloudwatchValue = (what, amount) => {
 }
 
 module.exports.calculateExponentialAverage = (event) => {
-  // var currencyPair = process.env.COIN + '-' + process.env.CURRENCY;
-  //
-  // var params = {
-  //   EndTime: new Date,
-  //   MetricName: 'Sell ' + currencyPair,
-  //   Namespace: 'Coinboss',
-  //   Period: event.minutes * 60,
-  //   StartTime: moment(new Date).subtract(event.minutes, 'm').toDate(),
-  //   Statistics: ['Average'],
-  //   Unit: 'Count'
-  // };
-  //
-  // cloudwatch.getMetricStatistics(params, function(err, data) {
-  //   if (err){
-  //     console.log(err, err.stack); // an error occurred
-  //   } else {
-  //     console.log(data);           // successful response
-  //     module.exports.putCloudwatchValue('ETH ' + event.minutes + ' average ', data.Datapoints[0].Average);
-  //   }
-  // });
+  var ma = MA(event.minutes * 60 * 1000);
+  var currencyPair = process.env.COIN + '-' + process.env.CURRENCY;
+
+  var params = {
+    EndTime: new Date,
+    MetricName: 'Sell ' + currencyPair,
+    Namespace: 'Coinboss',
+    Period: 60,
+    StartTime: moment(new Date).subtract(event.minutes, 'm').toDate(),
+    Statistics: ['Average'],
+    Unit: 'Count'
+  };
+
+  cloudwatch.getMetricStatistics(params, function(err, data) {
+    if (err){
+      console.log(err, err.stack); // an error occurred
+    } else {
+      console.log(data);           // successful response
+      data.Datapoints.forEach(function(item) {
+        ma.push(item.Timestamp, item.Average);
+      });
+
+      module.exports.putCloudwatchValue('ETH ' + event.minutes + ' exp average ', ma.movingAverage());
+    }
+  });
 }
 
 
