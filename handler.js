@@ -37,27 +37,27 @@ module.exports.putCloudwatchValue = (what, amount) => {
   });
 }
 
-module.exports.calculateAverage = (event) => {
-  var currencyPair = process.env.CURRENCY + '-' + process.env.CURRENCY;
-
-  var params = {
-    EndTime: new Date,
-    MetricName: 'Sell ' + currencyPair,
-    Namespace: 'Coinboss',
-    Period: event.minutes * 60,
-    StartTime: moment(new Date).subtract(event.minutes, 'm').toDate(),
-    Statistics: ['Average'],
-    Unit: 'Count'
-  };
-
-  cloudwatch.getMetricStatistics(params, function(err, data) {
-    if (err){
-      console.log(err, err.stack); // an error occurred
-    } else {
-      console.log(data);           // successful response
-      module.exports.putCloudwatchValue('ETH ' + event.minutes ' average ', data.Datapoints[0].Average);
-    }
-  });
+module.exports.calculateExponentialAverage = (event) => {
+  // var currencyPair = process.env.COIN + '-' + process.env.CURRENCY;
+  //
+  // var params = {
+  //   EndTime: new Date,
+  //   MetricName: 'Sell ' + currencyPair,
+  //   Namespace: 'Coinboss',
+  //   Period: event.minutes * 60,
+  //   StartTime: moment(new Date).subtract(event.minutes, 'm').toDate(),
+  //   Statistics: ['Average'],
+  //   Unit: 'Count'
+  // };
+  //
+  // cloudwatch.getMetricStatistics(params, function(err, data) {
+  //   if (err){
+  //     console.log(err, err.stack); // an error occurred
+  //   } else {
+  //     console.log(data);           // successful response
+  //     module.exports.putCloudwatchValue('ETH ' + event.minutes + ' average ', data.Datapoints[0].Average);
+  //   }
+  // });
 }
 
 

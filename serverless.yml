@@ -62,29 +62,6 @@ functions:
             BuyAt: ${file(./threshold.js):min}
             SellAt: ${file(./threshold.js):max}
 
-  calculateAverage:
-    handler: handler.calculateAverage
-    events:
-      - schedule:
-          rate: rate(15 minutes)
-          input:
-            minutes: 15
-      - schedule:
-          rate: rate(5 minutes)
-          input:
-            minutes: 5
-      - schedule:
-          rate: rate(60 minutes)
-          input:
-            minutes: 60
-    # environment:
-    #   StartAt:
-    #     Ref: 'StartAt'
-    #   Percentage:
-    #     Ref: 'Percentage'
-    #   Stack:
-    #     Ref: 'AWS::StackId'
-
 # you can add CloudFormation resource templates here
 resources:
   # Parameters:
