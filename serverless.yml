@@ -69,10 +69,22 @@ functions:
           rate: rate(1 minute)
           input:
             minutes: 15
+            transaction: Buy
+      - schedule:
+          rate: rate(1 minute)
+          input:
+            minutes: 15
+            transaction: Sell
       - schedule:
           rate: rate(1 minute)
           input:
             minutes: 60
+            transaction: Buy
+      - schedule:
+          rate: rate(1 minute)
+          input:
+            minutes: 60
+            transaction: Sell
     # environment:
     #   StartAt:
     #     Ref: 'StartAt'

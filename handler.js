@@ -44,7 +44,7 @@ module.exports.calculateExponentialAverage = (event) => {
 
   var params = {
     EndTime: new Date,
-    MetricName: 'Sell ' + currencyPair,
+    MetricName: event.transaction + ' ' + currencyPair,
     Namespace: 'Coinboss',
     Period: 60,
     StartTime: moment(new Date).subtract(event.minutes, 'm').toDate(),
