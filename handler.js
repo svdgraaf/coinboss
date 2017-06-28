@@ -61,7 +61,7 @@ module.exports.calculateExponentialAverage = (event) => {
         ma.push(item.Timestamp, item.Average);
       });
       console.log(ma.movingAverage());
-      // module.exports.putCloudwatchValue(event.transaction + ' ' + currencyPair + ' ' + event.minutes + ' exp average ', ma.movingAverage());
+      module.exports.putCloudwatchValue(event.transaction + ' ' + currencyPair + ' ' + event.minutes + ' exp average ', ma.movingAverage());
     }
   });
 }
