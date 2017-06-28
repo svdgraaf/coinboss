@@ -17,9 +17,9 @@ provider:
   environment:
     API_KEY: ${self:custom.api_key}
     API_SECRET: ${self:custom.api_secret}
-    CURRENCY: ${self:custom.currency}
-    PERCENTAGE: ${self:custom.percentage}
-    COIN: ${self:custom.api_key}
+    #CURRENCY: ${self:custom.currency}
+    #PERCENTAGE: ${self:custom.percentage}
+    #COIN: ${self:custom.api_key}
 
   iamRoleStatements:
     -  Effect: "Allow"
