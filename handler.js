@@ -46,7 +46,7 @@ module.exports.calculateExponentialAverage = (event) => {
     EndTime: new Date,
     MetricName: event.transaction + ' ' + currencyPair,
     Namespace: 'Coinboss',
-    Period: 60,
+    Period: event.minutes*2,
     StartTime: moment(new Date).subtract(event.minutes, 'm').toDate(),
     Statistics: ['Average'],
     Unit: 'Count'
@@ -60,8 +60,8 @@ module.exports.calculateExponentialAverage = (event) => {
       data.Datapoints.forEach(function(item) {
         ma.push(item.Timestamp, item.Average);
       });
-
-      module.exports.putCloudwatchValue(event.transaction + ' ' + currencyPair + ' ' + event.minutes + ' exp average ', ma.movingAverage());
+      console.log(ma.movingAverage());
+      // module.exports.putCloudwatchValue(event.transaction + ' ' + currencyPair + ' ' + event.minutes + ' exp average ', ma.movingAverage());
     }
   });
 }

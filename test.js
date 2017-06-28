@@ -2,6 +2,6 @@
 var foo = require('./handler.js')
 
 foo.calculateExponentialAverage({
-  minutes: 60,
+  minutes: 15,
   transaction: 'Sell'
 });
